@@ -116,9 +116,10 @@ const mobileInput = {
   sprint: false
 };
 let touchLookSensitivity = Number(localStorage.getItem("escape_touch_look_sensitivity") || "1.2");
-let soundEnabled = localStorage.getItem("escape_sound_enabled") === "1";
+let soundEnabled = localStorage.getItem("escape_sound_enabled") !== "0";
 let audioCtx = null;
 let ambientNodes = null;
+let audioUnlocked = false;
 
 const FOV = Math.PI / 3;
 const MAX_VIEW_DIST = 20;
@@ -1604,6 +1605,15 @@ async function setAmbientSound(enabled) {
   else ambientNodes.stopMusic();
 }
 
+function unlockAudioOnGesture() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  ensureAudioContext();
+  if (soundEnabled) {
+    setAmbientSound(true);
+  }
+}
+
 function tryInteractAction() {
   if (questionOverlay.classList.contains("visible") || roomOverlay.classList.contains("visible")) return;
   if (collectTreasure()) return;
@@ -1813,6 +1823,9 @@ canvas.addEventListener("click", () => {
 document.addEventListener("keydown", handleKeyDown);
 document.addEventListener("keyup", handleKeyUp);
 document.addEventListener("mousemove", handleMouseMove);
+document.addEventListener("pointerdown", unlockAudioOnGesture, { passive: true });
+document.addEventListener("touchstart", unlockAudioOnGesture, { passive: true });
+document.addEventListener("keydown", unlockAudioOnGesture);
 window.addEventListener("resize", resizeCanvas);
 
 resizeCanvas();
