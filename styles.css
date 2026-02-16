@@ -1,0 +1,254 @@
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #0f1220;
+  color: #e9eef7;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+canvas {
+  display: block;
+}
+
+#hud {
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 20;
+  background: rgba(10, 14, 28, 0.7);
+  border: 1px solid rgba(190, 220, 255, 0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 14px;
+  max-width: 380px;
+}
+
+#student-name {
+  font-weight: 700;
+  margin-bottom: 6px;
+  color: #9ee9b6;
+}
+
+#objective {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+#hint {
+  opacity: 0.9;
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+#stats {
+  line-height: 1.35;
+}
+
+#perks {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #ffe7a1;
+  line-height: 1.35;
+}
+
+#crosshair {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 30;
+  pointer-events: none;
+  user-select: none;
+}
+
+#robox-reticle {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(194, 237, 255, 0.95);
+  border-radius: 4px;
+  background:
+    radial-gradient(circle at 8px 9px, rgba(194, 237, 255, 0.95) 0 2px, transparent 3px),
+    radial-gradient(circle at 16px 9px, rgba(194, 237, 255, 0.95) 0 2px, transparent 3px),
+    linear-gradient(to bottom, transparent 14px, rgba(194, 237, 255, 0.9) 14px 16px, transparent 16px);
+  box-shadow: 0 0 10px rgba(120, 220, 255, 0.7);
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(5, 8, 18, 0.82);
+}
+
+.overlay.visible {
+  display: flex;
+}
+
+.panel {
+  width: min(92vw, 540px);
+  background: #1a223d;
+  border: 1px solid rgba(190, 220, 255, 0.25);
+  border-radius: 14px;
+  padding: 20px;
+}
+
+.panel h1, .panel h2 {
+  margin-top: 0;
+}
+
+.panel button {
+  background: #32d38b;
+  color: #0a1820;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#switch-student-btn {
+  margin-left: 8px;
+  background: #9ec8ff;
+}
+
+#teacher-link-btn {
+  margin-left: 8px;
+  background: #ffd26f;
+}
+
+.panel button:hover {
+  filter: brightness(0.95);
+}
+
+#choices {
+  margin: 14px 0;
+  display: grid;
+  gap: 8px;
+}
+
+.choice-btn {
+  width: 100%;
+  text-align: left;
+  background: #2a355a;
+  color: #ecf2ff;
+  border: 1px solid rgba(190, 220, 255, 0.25);
+}
+
+.choice-btn.correct {
+  background: #1f7f59;
+}
+
+.choice-btn.wrong {
+  background: #8e2c3b;
+}
+
+#feedback {
+  min-height: 22px;
+  font-weight: 600;
+}
+
+.dashboard-body {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+}
+
+.dashboard-wrap {
+  width: min(92vw, 560px);
+}
+
+.dashboard-card {
+  background: #1a223d;
+  border: 1px solid rgba(190, 220, 255, 0.25);
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.dashboard-card input {
+  width: 100%;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 220, 255, 0.25);
+  background: #1d2a48;
+  color: #e9eef7;
+  padding: 10px;
+}
+
+.dashboard-card select {
+  width: 100%;
+  margin-top: 8px;
+  border-radius: 8px;
+  border: 1px solid rgba(190, 220, 255, 0.25);
+  background: #1d2a48;
+  color: #e9eef7;
+  padding: 10px;
+}
+
+#dashboard-error {
+  min-height: 18px;
+  color: #ff9ca8;
+  font-size: 13px;
+}
+
+#teacher-pin-error {
+  min-height: 18px;
+  color: #ff9ca8;
+  font-size: 13px;
+}
+
+#login-btn {
+  margin-top: 8px;
+}
+
+.dashboard-note {
+  font-size: 13px;
+  opacity: 0.9;
+}
+
+.hidden-panel {
+  display: none;
+}
+
+.teacher-actions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+#report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+#report-table th, #report-table td {
+  border: 1px solid rgba(190, 220, 255, 0.25);
+  padding: 6px 8px;
+  text-align: left;
+}
+
+#report-table th {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+@media (max-width: 900px) {
+  .teacher-actions {
+    flex-wrap: wrap;
+  }
+}

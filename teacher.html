@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Teacher Report - Escape Room</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dashboard-body">
+  <main class="dashboard-wrap">
+    <section class="dashboard-card">
+      <h1>Teacher Report</h1>
+      <p>Per-level performance history across students.</p>
+      <div class="teacher-actions">
+        <button id="export-btn" type="button">Export CSV</button>
+        <button id="clear-btn" type="button">Clear Report</button>
+        <button id="logout-btn" type="button">Logout</button>
+        <button type="button" onclick="window.location.href='dashboard.html'">Back</button>
+      </div>
+      <div class="table-wrap">
+        <table id="report-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Student</th>
+              <th>Course</th>
+              <th>Level</th>
+              <th>Time</th>
+              <th>Score +</th>
+              <th>Attempts</th>
+              <th>Accuracy</th>
+              <th>Reward</th>
+              <th>Treasure</th>
+            </tr>
+          </thead>
+          <tbody id="report-body"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="teacher.js"></script>
+</body>
+</html>

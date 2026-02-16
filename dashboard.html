@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Selection - Escape Room</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="dashboard-body">
+  <main class="dashboard-wrap">
+    <section class="dashboard-card">
+      <div id="role-selector">
+        <h1>Select Dashboard</h1>
+        <p>Choose your role to continue.</p>
+        <div class="teacher-actions">
+          <button id="student-role-btn" type="button">Student</button>
+          <button id="teacher-role-btn" type="button">Teacher</button>
+        </div>
+      </div>
+
+      <div id="student-panel" class="hidden-panel">
+        <h1>Student Dashboard</h1>
+        <p>Enter your full name and choose a course track.</p>
+        <label for="full-name-input">Full Name</label>
+        <input id="full-name-input" type="text" placeholder="First Last" />
+        <label for="course-select">Course</label>
+        <select id="course-select">
+          <option value="algebra1">Algebra 1</option>
+          <option value="precalculus">Precalculus</option>
+        </select>
+        <p id="dashboard-error"></p>
+        <button id="login-btn" type="button">Enter Escape Room</button>
+        <button id="back-role-btn" type="button">Back</button>
+        <p class="dashboard-note">Questions are personalized by student name, course, and session.</p>
+      </div>
+
+      <div id="teacher-panel" class="hidden-panel">
+        <h1>Teacher Dashboard</h1>
+        <p>Enter teacher PIN to open class performance reports.</p>
+        <label for="teacher-pin-input">Teacher PIN</label>
+        <input id="teacher-pin-input" type="password" placeholder="Enter PIN" />
+        <p id="teacher-pin-error"></p>
+        <div class="teacher-actions">
+          <button id="teacher-btn" type="button">Open Teacher Report</button>
+          <button id="back-role-btn-2" type="button">Back</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script src="dashboard.js"></script>
+</body>
+</html>
