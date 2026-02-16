@@ -26,6 +26,13 @@ const roomOverlayTextEl = document.getElementById("room-overlay-text");
 const roomOverlayBtn = document.getElementById("room-overlay-btn");
 const finalSummaryEl = document.getElementById("final-summary");
 const engineStatusEl = document.getElementById("engine-status");
+const joystickAreaEl = document.getElementById("joystick-area");
+const joystickKnobEl = document.getElementById("joystick-knob");
+const mobileInteractBtn = document.getElementById("mobile-interact");
+const mobileJumpBtn = document.getElementById("mobile-jump");
+const mobileSprintBtn = document.getElementById("mobile-sprint");
+const lookSensitivityInput = document.getElementById("look-sensitivity");
+const lookSensitivityValueEl = document.getElementById("look-sensitivity-value");
 
 const studentName = (localStorage.getItem("escape_student_name") || "").trim();
 if (!studentName) {
@@ -95,6 +102,19 @@ const input = {
   ArrowLeft: false,
   ArrowRight: false
 };
+
+const isTouchDevice =
+  window.matchMedia("(pointer: coarse)").matches ||
+  "ontouchstart" in window ||
+  navigator.maxTouchPoints > 0;
+
+const mobileInput = {
+  moveX: 0,
+  moveY: 0,
+  lookX: 0,
+  sprint: false
+};
+let touchLookSensitivity = Number(localStorage.getItem("escape_touch_look_sensitivity") || "1.2");
 
 const FOV = Math.PI / 3;
 const MAX_VIEW_DIST = 20;
@@ -1163,13 +1183,15 @@ function drawTreasure(depthBuffer, cameraOffsetY) {
 }
 
 function updatePlayer(dt) {
-  const rot = (Number(input.ArrowRight) - Number(input.ArrowLeft)) * player.rotSpeed * dt;
+  const lookInput = (Number(input.ArrowRight) - Number(input.ArrowLeft)) + mobileInput.lookX;
+  const rot = lookInput * player.rotSpeed * dt;
   player.angle = normalizeAngle(player.angle + rot);
+  mobileInput.lookX = 0;
 
   let moveX = 0;
   let moveY = 0;
-  const forward = Number(input.KeyW) - Number(input.KeyS);
-  const strafe = Number(input.KeyD) - Number(input.KeyA);
+  const forward = Math.max(-1, Math.min(1, (Number(input.KeyW) - Number(input.KeyS)) + mobileInput.moveY));
+  const strafe = Math.max(-1, Math.min(1, (Number(input.KeyD) - Number(input.KeyA)) + mobileInput.moveX));
 
   if (forward !== 0) {
     moveX += Math.cos(player.angle) * forward;
@@ -1191,7 +1213,7 @@ function updatePlayer(dt) {
   if (len > 0) {
     moveX /= len;
     moveY /= len;
-    const isSprinting = gameState.perks.sprintUnlocked && (input.ShiftLeft || input.ShiftRight);
+    const isSprinting = gameState.perks.sprintUnlocked && (input.ShiftLeft || input.ShiftRight || mobileInput.sprint);
     const sprintMul = isSprinting ? 1.6 : 1;
     const step = player.moveSpeed * gameState.perks.speedMul * sprintMul * dt;
     tryMove(player.x + moveX * step, player.y);
@@ -1319,8 +1341,8 @@ function applyDoorSetup(roomIndex, doorIndex) {
   objectiveEl.textContent = `${source.description} Solve 3 questions to unlock treasure "${gameState.currentTreasureName}" (difficulty level ${roomIndex + 1}).`;
   if (hintEl) {
     hintEl.textContent = gameState.perks.sprintUnlocked
-      ? "Move: WASD | Look: Mouse/Arrows | Sprint: Shift | Interact: E | Jump: Space"
-      : "Move: WASD | Look: Mouse/Arrows | Interact: E | Jump: Space";
+      ? "Move: WASD/touch joystick | Look: Mouse/Arrows or touch | Sprint: Shift/button | Interact: E/button | Jump: Space/button"
+      : "Move: WASD/touch joystick | Look: Mouse/Arrows or touch | Interact: E/button | Jump: Space/button";
   }
   updateProgress();
   updateStatsHud();
@@ -1461,6 +1483,24 @@ function handleRestartClick() {
   startSession();
 }
 
+function tryInteractAction() {
+  if (questionOverlay.classList.contains("visible") || roomOverlay.classList.contains("visible")) return;
+  if (collectTreasure()) return;
+  const station = getInteractStation();
+  if (station) {
+    if (hintEl) {
+      hintEl.textContent = gameState.perks.sprintUnlocked
+        ? "Move: WASD | Look: Mouse/Arrows or touch | Sprint: Shift | Interact: E | Jump: Space"
+        : "Move: WASD | Look: Mouse/Arrows or touch | Interact: E | Jump: Space";
+    }
+    showQuestion(station);
+  } else if (hintEl) {
+    hintEl.textContent = gameState.treasureUnlocked
+      ? "Treasure is unlocked. Move near the chest and interact."
+      : "No station nearby. Move closer to a question door, then interact.";
+  }
+}
+
 function handleKeyDown(event) {
   if (event.code === "Space") {
     event.preventDefault();
@@ -1469,21 +1509,7 @@ function handleKeyDown(event) {
   }
   if (event.code in input) input[event.code] = true;
   if (event.code === "KeyE") {
-    if (questionOverlay.classList.contains("visible") || roomOverlay.classList.contains("visible")) return;
-    if (collectTreasure()) return;
-    const station = getInteractStation();
-    if (station) {
-      if (hintEl) {
-        hintEl.textContent = gameState.perks.sprintUnlocked
-          ? "Move: WASD | Look: Mouse/Arrows | Sprint: Shift | Interact: E | Jump: Space"
-          : "Move: WASD | Look: Mouse/Arrows | Interact: E | Jump: Space";
-      }
-      showQuestion(station);
-    } else if (hintEl) {
-      hintEl.textContent = gameState.treasureUnlocked
-        ? "Treasure is unlocked. Move near the chest and press E."
-        : "No station nearby. Move closer to a question door, then press E.";
-    }
+    tryInteractAction();
   }
 }
 
@@ -1493,8 +1519,149 @@ function handleKeyUp(event) {
 
 function handleMouseMove(event) {
   if (!gameState.isPlaying || questionOverlay.classList.contains("visible") || roomOverlay.classList.contains("visible")) return;
+  if (isTouchDevice) return;
   if (document.pointerLockElement !== canvas) return;
   player.angle = normalizeAngle(player.angle + event.movementX * 0.0025);
+}
+
+function setupMobileControls() {
+  if (!isTouchDevice) return;
+
+  if (lookSensitivityInput && lookSensitivityValueEl) {
+    lookSensitivityInput.value = String(touchLookSensitivity);
+    lookSensitivityValueEl.textContent = `${touchLookSensitivity.toFixed(1)}x`;
+    lookSensitivityInput.addEventListener("input", () => {
+      touchLookSensitivity = Number(lookSensitivityInput.value);
+      lookSensitivityValueEl.textContent = `${touchLookSensitivity.toFixed(1)}x`;
+      localStorage.setItem("escape_touch_look_sensitivity", String(touchLookSensitivity));
+    });
+  }
+
+  let joyTouchId = null;
+  let lookTouchId = null;
+  let lookLastX = 0;
+  const joyRadius = 40;
+
+  const centerKnob = () => {
+    if (!joystickKnobEl) return;
+    joystickKnobEl.style.transform = "translate(0px, 0px)";
+  };
+  centerKnob();
+
+  const updateJoystickFromTouch = (touch) => {
+    if (!joystickAreaEl || !joystickKnobEl) return;
+    const rect = joystickAreaEl.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    let dx = touch.clientX - cx;
+    let dy = touch.clientY - cy;
+    const mag = Math.hypot(dx, dy);
+    if (mag > joyRadius) {
+      dx = (dx / mag) * joyRadius;
+      dy = (dy / mag) * joyRadius;
+    }
+    mobileInput.moveX = dx / joyRadius;
+    mobileInput.moveY = -dy / joyRadius;
+    joystickKnobEl.style.transform = `translate(${dx}px, ${dy}px)`;
+  };
+
+  joystickAreaEl?.addEventListener(
+    "touchstart",
+    (e) => {
+      const t = e.changedTouches[0];
+      joyTouchId = t.identifier;
+      updateJoystickFromTouch(t);
+    },
+    { passive: true }
+  );
+
+  joystickAreaEl?.addEventListener(
+    "touchmove",
+    (e) => {
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.identifier !== joyTouchId) continue;
+        updateJoystickFromTouch(t);
+      }
+    },
+    { passive: true }
+  );
+
+  joystickAreaEl?.addEventListener(
+    "touchend",
+    (e) => {
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.identifier !== joyTouchId) continue;
+        joyTouchId = null;
+        mobileInput.moveX = 0;
+        mobileInput.moveY = 0;
+        centerKnob();
+      }
+    },
+    { passive: true }
+  );
+
+  const startJump = () => {
+    if (player.z === 0) player.vz = JUMP_SPEED * gameState.perks.jumpMul;
+  };
+
+  mobileInteractBtn?.addEventListener("click", () => tryInteractAction());
+  mobileJumpBtn?.addEventListener("click", startJump);
+
+  mobileSprintBtn?.addEventListener("touchstart", () => {
+    mobileInput.sprint = true;
+  });
+  mobileSprintBtn?.addEventListener("touchend", () => {
+    mobileInput.sprint = false;
+  });
+  mobileSprintBtn?.addEventListener("touchcancel", () => {
+    mobileInput.sprint = false;
+  });
+  mobileSprintBtn?.addEventListener("click", () => {
+    mobileInput.sprint = !mobileInput.sprint;
+  });
+
+  canvas.addEventListener(
+    "touchstart",
+    (e) => {
+      if (!gameState.isPlaying || questionOverlay.classList.contains("visible") || roomOverlay.classList.contains("visible")) return;
+      for (const t of Array.from(e.changedTouches)) {
+        if (joyTouchId !== null && t.identifier === joyTouchId) continue;
+        if (t.clientX < window.innerWidth * 0.45) continue;
+        if (lookTouchId === null) {
+          lookTouchId = t.identifier;
+          lookLastX = t.clientX;
+        }
+      }
+    },
+    { passive: true }
+  );
+
+  canvas.addEventListener(
+    "touchmove",
+    (e) => {
+      if (lookTouchId === null) return;
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.identifier !== lookTouchId) continue;
+        const dx = t.clientX - lookLastX;
+        lookLastX = t.clientX;
+        mobileInput.lookX += Math.max(-1.6, Math.min(1.6, (dx / 35) * touchLookSensitivity));
+      }
+    },
+    { passive: true }
+  );
+
+  canvas.addEventListener(
+    "touchend",
+    (e) => {
+      for (const t of Array.from(e.changedTouches)) {
+        if (t.identifier === lookTouchId) {
+          lookTouchId = null;
+          lookLastX = 0;
+        }
+      }
+    },
+    { passive: true }
+  );
 }
 
 window.__startGame = handleStartClick;
@@ -1513,6 +1680,7 @@ roomOverlayBtn.addEventListener("click", () => {
 
 canvas.addEventListener("click", () => {
   if (!gameState.isPlaying) return;
+  if (isTouchDevice) return;
   if (document.pointerLockElement !== canvas && !questionOverlay.classList.contains("visible") && !roomOverlay.classList.contains("visible")) {
     canvas.requestPointerLock();
   }
@@ -1524,6 +1692,11 @@ document.addEventListener("mousemove", handleMouseMove);
 window.addEventListener("resize", resizeCanvas);
 
 resizeCanvas();
+setupMobileControls();
+if (!isTouchDevice && lookSensitivityInput && lookSensitivityValueEl) {
+  lookSensitivityInput.disabled = true;
+  lookSensitivityValueEl.textContent = "N/A";
+}
 gameState.generatedPool = generateCourseQuestionPool(gameState.activeCourse, studentName, sessionSeed, 1, 100);
 applyDoorSetup(0, 0);
 requestAnimationFrame(gameLoop);

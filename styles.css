@@ -12,8 +12,13 @@ html, body {
   font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
 }
 
+.game-page {
+  touch-action: none;
+}
+
 canvas {
   display: block;
+  touch-action: none;
 }
 
 #hud {
@@ -57,6 +62,22 @@ canvas {
   line-height: 1.35;
 }
 
+#touch-settings {
+  margin-top: 6px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+#look-sensitivity {
+  width: 120px;
+}
+
+#look-sensitivity-value {
+  min-width: 34px;
+}
+
 #crosshair {
   position: fixed;
   left: 50%;
@@ -78,6 +99,58 @@ canvas {
     radial-gradient(circle at 16px 9px, rgba(194, 237, 255, 0.95) 0 2px, transparent 3px),
     linear-gradient(to bottom, transparent 14px, rgba(194, 237, 255, 0.9) 14px 16px, transparent 16px);
   box-shadow: 0 0 10px rgba(120, 220, 255, 0.7);
+}
+
+#mobile-controls {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  pointer-events: none;
+  display: none;
+}
+
+#joystick-area {
+  position: absolute;
+  left: 14px;
+  bottom: 18px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid rgba(210, 235, 255, 0.5);
+  background: rgba(20, 30, 50, 0.45);
+  pointer-events: auto;
+}
+
+#joystick-knob {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 44px;
+  height: 44px;
+  margin-left: -22px;
+  margin-top: -22px;
+  border-radius: 50%;
+  background: rgba(158, 225, 255, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+#mobile-actions {
+  position: absolute;
+  right: 14px;
+  bottom: 18px;
+  display: grid;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+#mobile-actions button {
+  min-width: 90px;
+  border: none;
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-weight: 700;
+  background: rgba(50, 211, 139, 0.92);
+  color: #0a1820;
 }
 
 .overlay {
@@ -250,5 +323,26 @@ canvas {
 @media (max-width: 900px) {
   .teacher-actions {
     flex-wrap: wrap;
+  }
+
+  #mobile-controls {
+    display: block;
+  }
+
+  #crosshair {
+    display: none;
+  }
+
+  #hud {
+    max-width: calc(100vw - 24px);
+    font-size: 13px;
+  }
+
+  #hint {
+    font-size: 11px;
+  }
+
+  #touch-settings {
+    display: flex;
   }
 }

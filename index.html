@@ -6,7 +6,7 @@
   <title>Trigonometry Escape Room</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
+<body class="game-page">
   <div id="hud">
     <div id="student-name">Student: -</div>
     <div id="objective">Solve all trig stations to unlock the door.</div>
@@ -14,10 +14,26 @@
     <div id="progress">Solved: 0 / 3</div>
     <div id="stats">Time: 00:00 | Score: 0 | Attempts: 0 | Accuracy: 0%</div>
     <div id="perks">Perks: none</div>
+    <div id="touch-settings">
+      <label for="look-sensitivity">Touch Look</label>
+      <input id="look-sensitivity" type="range" min="0.5" max="2.5" step="0.1" value="1.2" />
+      <span id="look-sensitivity-value">1.2x</span>
+    </div>
     <div id="hint">Click to lock cursor. Move: WASD | Interact: E near orb | Jump: Space</div>
   </div>
 
   <div id="crosshair"><span id="robox-reticle"></span></div>
+
+  <div id="mobile-controls">
+    <div id="joystick-area">
+      <div id="joystick-knob"></div>
+    </div>
+    <div id="mobile-actions">
+      <button id="mobile-interact" type="button">E</button>
+      <button id="mobile-jump" type="button">Jump</button>
+      <button id="mobile-sprint" type="button">Sprint</button>
+    </div>
+  </div>
 
   <div id="start-overlay" class="overlay visible">
     <div class="panel">
