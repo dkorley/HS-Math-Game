@@ -38,10 +38,7 @@ function verifyToken(token, secret) {
 }
 
 module.exports = async (req, res) => {
-  const authSecret = process.env.TEACHER_AUTH_SECRET;
-  if (!authSecret) {
-    return res.status(500).json({ ok: false, error: "Server auth is not configured" });
-  }
+  const authSecret = process.env.TEACHER_AUTH_SECRET || "insecure-dev-secret-change-me";
   const cookies = parseCookies(req.headers.cookie || "");
   const token = cookies.teacher_session;
   if (!verifyToken(token, authSecret)) {

@@ -29,10 +29,7 @@ module.exports = async (req, res) => {
   }
 
   const teacherPin = process.env.TEACHER_PIN || "8520";
-  const authSecret = process.env.TEACHER_AUTH_SECRET;
-  if (!teacherPin || !authSecret) {
-    return res.status(500).json({ ok: false, error: "Server auth is not configured" });
-  }
+  const authSecret = process.env.TEACHER_AUTH_SECRET || "insecure-dev-secret-change-me";
 
   const pin = (req.body && req.body.pin ? String(req.body.pin) : "").trim();
   const pinAlt = teacherPin.endsWith("$") ? teacherPin.slice(0, -1) : `${teacherPin}$`;
