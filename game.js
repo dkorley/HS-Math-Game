@@ -31,6 +31,7 @@ const joystickKnobEl = document.getElementById("joystick-knob");
 const mobileInteractBtn = document.getElementById("mobile-interact");
 const mobileJumpBtn = document.getElementById("mobile-jump");
 const mobileSprintBtn = document.getElementById("mobile-sprint");
+const soundToggleBtn = document.getElementById("sound-toggle");
 const lookSensitivityInput = document.getElementById("look-sensitivity");
 const lookSensitivityValueEl = document.getElementById("look-sensitivity-value");
 
@@ -115,6 +116,9 @@ const mobileInput = {
   sprint: false
 };
 let touchLookSensitivity = Number(localStorage.getItem("escape_touch_look_sensitivity") || "1.2");
+let soundEnabled = localStorage.getItem("escape_sound_enabled") === "1";
+let audioCtx = null;
+let ambientNodes = null;
 
 const FOV = Math.PI / 3;
 const MAX_VIEW_DIST = 20;
@@ -1475,12 +1479,129 @@ function gameLoop(ts) {
 
 function handleStartClick() {
   startOverlay.classList.remove("visible");
+  if (soundEnabled) {
+    setAmbientSound(true);
+  }
   startSession();
 }
 
 function handleRestartClick() {
   winOverlay.classList.remove("visible");
   startSession();
+}
+
+function updateSoundToggleText() {
+  if (!soundToggleBtn) return;
+  soundToggleBtn.textContent = `Sound: ${soundEnabled ? "On" : "Off"}`;
+}
+
+function createAmbientSoundGraph() {
+  if (!audioCtx) return null;
+  const master = audioCtx.createGain();
+  master.gain.value = 0.0001;
+  master.connect(audioCtx.destination);
+
+  const bass = audioCtx.createOscillator();
+  bass.type = "triangle";
+  bass.frequency.value = 110;
+  const bassGain = audioCtx.createGain();
+  bassGain.gain.value = 0.16;
+  bass.connect(bassGain);
+  bassGain.connect(master);
+  bass.start();
+
+  const kickTone = audioCtx.createOscillator();
+  kickTone.type = "sine";
+  kickTone.frequency.value = 46;
+  const kickGain = audioCtx.createGain();
+  kickGain.gain.value = 0.0;
+  kickTone.connect(kickGain);
+  kickGain.connect(master);
+  kickTone.start();
+
+  const melodyGain = audioCtx.createGain();
+  melodyGain.gain.value = 0.22;
+  melodyGain.connect(master);
+
+  const melody = [261.63, 329.63, 392.0, 523.25, 392.0, 329.63, 293.66, 349.23];
+  const bassLine = [110.0, 98.0, 123.47, 130.81];
+  let step = 0;
+  let timer = null;
+
+  const playPluck = (freq, lengthMs = 220, wave = "sawtooth", gainAmount = 0.18) => {
+    const osc = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    osc.type = wave;
+    osc.frequency.value = freq;
+    g.gain.value = 0.0001;
+    osc.connect(g);
+    g.connect(melodyGain);
+    const now = audioCtx.currentTime;
+    g.gain.setValueAtTime(0.0001, now);
+    g.gain.exponentialRampToValueAtTime(gainAmount, now + 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, now + lengthMs / 1000);
+    osc.start(now);
+    osc.stop(now + lengthMs / 1000 + 0.05);
+  };
+
+  const pulseKick = () => {
+    const now = audioCtx.currentTime;
+    kickGain.gain.cancelScheduledValues(now);
+    kickGain.gain.setValueAtTime(0.0001, now);
+    kickGain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+    kickGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.14);
+  };
+
+  const startMusic = () => {
+    if (timer !== null) return;
+    timer = setInterval(() => {
+      const m = melody[step % melody.length];
+      playPluck(m, 220, "triangle", 0.17);
+      if (step % 2 === 0) playPluck(m * 2, 140, "sine", 0.08);
+      if (step % 4 === 0) pulseKick();
+      bass.frequency.setValueAtTime(bassLine[Math.floor(step / 2) % bassLine.length], audioCtx.currentTime);
+      step += 1;
+    }, 260);
+  };
+
+  const stopMusic = () => {
+    if (timer === null) return;
+    clearInterval(timer);
+    timer = null;
+  };
+
+  return { master, bass, bassGain, kickTone, kickGain, melodyGain, startMusic, stopMusic };
+}
+
+function ensureAudioContext() {
+  if (audioCtx) return;
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return;
+  audioCtx = new Ctx();
+}
+
+async function setAmbientSound(enabled) {
+  soundEnabled = enabled;
+  localStorage.setItem("escape_sound_enabled", enabled ? "1" : "0");
+  updateSoundToggleText();
+
+  ensureAudioContext();
+  if (!audioCtx) return;
+  try {
+    await audioCtx.resume();
+  } catch {}
+
+  if (!ambientNodes) {
+    ambientNodes = createAmbientSoundGraph();
+  }
+  if (!ambientNodes) return;
+
+  const now = audioCtx.currentTime;
+  ambientNodes.master.gain.cancelScheduledValues(now);
+  ambientNodes.master.gain.setValueAtTime(ambientNodes.master.gain.value, now);
+  ambientNodes.master.gain.linearRampToValueAtTime(enabled ? 0.09 : 0.0001, now + 0.3);
+  if (enabled) ambientNodes.startMusic();
+  else ambientNodes.stopMusic();
 }
 
 function tryInteractAction() {
@@ -1673,6 +1794,9 @@ if (studentNameEl) studentNameEl.textContent = `Student: ${studentName} | Course
 startBtn.addEventListener("click", handleStartClick);
 restartBtn.addEventListener("click", handleRestartClick);
 closeQuestionBtn.addEventListener("click", closeQuestion);
+soundToggleBtn?.addEventListener("click", () => {
+  setAmbientSound(!soundEnabled);
+});
 roomOverlayBtn.addEventListener("click", () => {
   roomOverlay.classList.remove("visible");
   resumeTimer();
@@ -1693,6 +1817,7 @@ window.addEventListener("resize", resizeCanvas);
 
 resizeCanvas();
 setupMobileControls();
+updateSoundToggleText();
 if (!isTouchDevice && lookSensitivityInput && lookSensitivityValueEl) {
   lookSensitivityInput.disabled = true;
   lookSensitivityValueEl.textContent = "N/A";

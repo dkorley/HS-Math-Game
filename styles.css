@@ -62,6 +62,17 @@ canvas {
   line-height: 1.35;
 }
 
+#sound-toggle {
+  margin-top: 6px;
+  border: none;
+  border-radius: 8px;
+  background: #9ec8ff;
+  color: #0a1820;
+  padding: 6px 10px;
+  font-weight: 700;
+  font-size: 12px;
+}
+
 #touch-settings {
   margin-top: 6px;
   display: flex;
