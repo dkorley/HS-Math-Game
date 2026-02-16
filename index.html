@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Trigonometry Escape Room</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div id="hud">
+    <div id="student-name">Student: -</div>
+    <div id="objective">Solve all trig stations to unlock the door.</div>
+    <div id="room-label">Level: 1 / 10</div>
+    <div id="progress">Solved: 0 / 3</div>
+    <div id="stats">Time: 00:00 | Score: 0 | Attempts: 0 | Accuracy: 0%</div>
+    <div id="perks">Perks: none</div>
+    <div id="hint">Click to lock cursor. Move: WASD | Interact: E near orb | Jump: Space</div>
+  </div>
+
+  <div id="crosshair"><span id="robox-reticle"></span></div>
+
+  <div id="start-overlay" class="overlay visible">
+    <div class="panel">
+      <h1>Trigonometry Escape Room</h1>
+      <p>Answer trig questions at each station to unlock every door.</p>
+      <p id="engine-status">Engine status: loading...</p>
+      <button id="start-btn" type="button" onclick="window.startEscapeRoomFallback()">Start Game</button>
+      <button id="switch-student-btn" type="button" onclick="window.location.href='dashboard.html'">Switch Student</button>
+      <button id="teacher-link-btn" type="button" onclick="window.location.href='teacher.html'">Teacher Report</button>
+    </div>
+  </div>
+
+  <div id="question-overlay" class="overlay">
+    <div class="panel">
+      <h2 id="question-title">Question</h2>
+      <p id="question-text"></p>
+      <div id="choices"></div>
+      <p id="feedback"></p>
+      <button id="another-question" type="button">Another Question</button>
+      <button id="close-question">Close</button>
+    </div>
+  </div>
+
+  <div id="room-overlay" class="overlay">
+    <div class="panel">
+      <h2 id="room-overlay-title">Room 1</h2>
+      <p id="room-overlay-text"></p>
+      <button id="room-overlay-btn">Begin Room</button>
+    </div>
+  </div>
+
+  <div id="win-overlay" class="overlay">
+    <div class="panel">
+      <h1>You Escaped</h1>
+      <p id="final-summary">Great work. You solved every trigonometry challenge.</p>
+      <button id="restart-btn" type="button" onclick="window.restartEscapeRoomFallback()">Play Again</button>
+      <button type="button" onclick="window.location.href='dashboard.html'">Back To Dashboard</button>
+      <button type="button" onclick="window.location.href='teacher.html'">Teacher Report</button>
+    </div>
+  </div>
+
+  <script>
+    window.__engineLoaded = false;
+    window.startEscapeRoomFallback = function () {
+      const status = document.getElementById("engine-status");
+      if (typeof window.__startGame === "function") {
+        window.__startGame();
+        return;
+      }
+      if (status) {
+        status.textContent =
+          "Engine status: failed to load. Run on http://localhost:8000 and hard refresh (Ctrl+F5).";
+      }
+    };
+    window.restartEscapeRoomFallback = function () {
+      if (typeof window.__restartGame === "function") {
+        window.__restartGame();
+      }
+    };
+  </script>
+  <script src="game.js"></script>
+</body>
+</html>
